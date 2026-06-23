@@ -25,12 +25,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Kodu al
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Node.js 20
-        uses: actions/setup-node@v4
+      - name: Node.js 24
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Bağımlılıklar
@@ -42,7 +42,7 @@ jobs:
           CI: true
 
       - name: Çıktıları yükle (Artifact)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows
           retention-days: 90
@@ -55,12 +55,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Kodu al
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Node.js 20
-        uses: actions/setup-node@v4
+      - name: Node.js 24
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Bağımlılıklar
@@ -72,7 +72,7 @@ jobs:
           CI: true
 
       - name: Çıktıları yükle (Artifact)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macos
           retention-days: 90
@@ -89,13 +89,13 @@ jobs:
       contents: write
     steps:
       - name: Windows artifact indir
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: windows
           path: dist/windows
 
       - name: macOS artifact indir
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: macos
           path: dist/macos

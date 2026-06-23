@@ -62,18 +62,36 @@ Sadece Windows `.exe` gerekiyorsa (Mac müşteri yok) — **daha az dakika, bill
 
 ---
 
-## 4. GitHub Actions — Billing hatası ve çözümler
+## 4. GitHub Actions — Billing / hesap kilitli
 
-### Aldığınız hata
+### Hata A — Spending limit / ödeme başarısız
 
 ```
 The job was not started because recent account payments have failed
 or your spending limit needs to be increased.
 ```
 
-Bu **kod hatası değil** — GitHub hesabında faturalandırma/ limit ayarı engelliyor.
+### Hata B — Hesap kilitli (public repo bile çalışmaz)
 
-### GitHub Actions fiyat özeti (2025)
+```
+The job was not started because your account is locked due to a billing issue.
+```
+
+**Önemli:** Repoyu **public** yaptınız ama hâlâ bu hatayı alıyorsanız sorun repoda değil — **tüm GitHub hesabınız** faturalandırma yüzünden kilitli. Public repo = Actions ücretsiz olur, ama **kilitli hesapta hiçbir workflow başlamaz**.
+
+**Hesabı açmak için:**
+1. https://github.com/settings/billing
+2. Kırmızı uyarı / outstanding balance var mı bakın
+3. Ödeme yöntemini güncelleyin (geçerli kart)
+4. Varsa **ödenmemiş faturayı** kapatın
+5. Spending limit tanımlayın (ör. $5–10) — çoğu MVP'de fatura $0 kalır
+6. Birkaç saat bekleyin; hâlâ kilitliyse: https://support.github.com
+
+**GitHub Actions düzelene kadar Windows .exe için → §6 AppVeyor (hemen kullanın).**
+
+---
+
+### GitHub Actions fiyat özeti (hesap açıkken)
 
 | Repo tipi | Standart runner |
 |-----------|-----------------|
@@ -97,7 +115,13 @@ Hata genelde şunlardan biri:
 
 ### Ne yapmalısınız? (öncelik sırası)
 
-#### ✅ Seçenek 1 — Repoyu PUBLIC yapın (önerilen, $0)
+#### 🚨 Hesap kilitliyse — AppVeyor kullanın (GitHub Actions beklemeden)
+
+Aşağıdaki **§6 AppVeyor** adımlarını izleyin. GitHub hesabından bağımsız, public OSS için **ücretsiz** Windows `.exe` üretir.
+
+Mac `.dmg` → kendi Mac'inizde `npm run dist:mac` (zaten `release/` klasöründe var).
+
+#### ✅ Seçenek 1 — Repoyu PUBLIC yapın ($0, hesap açık olmalı)
 
 Settings → General → Change visibility → **Public**
 
@@ -152,19 +176,26 @@ Sürüm güncelleme:
 
 ---
 
-## 6. Yöntem B — AppVeyor (ücretsiz Windows alternatifi)
+## 6. Yöntem B — AppVeyor (GitHub Actions kilitliyken BİRİNCİL yol)
 
-**Ne zaman:** GitHub billing çözülemiyorsa, sadece Windows `.exe` lazımsa.
+**Ne zaman:** `account is locked due to a billing issue` veya Actions hiç çalışmıyor.
 
-**Koşul:** Proje **açık kaynak** (public GitHub repo) — AppVeyor OSS planı ücretsiz.
+**Maliyet:** Public açık kaynak repo → **$0**
 
-**Kurulum:**
-1. https://ci.appveyor.com → GitHub ile giriş
-2. `taorder` reposunu ekle
-3. Push veya “New build” → Windows'ta `.exe` üretir
-4. AppVeyor arayüzünden artifact indir
+**Adımlar:**
 
-Config: kökte `appveyor.yml`
+1. Kod GitHub'da public ve push edilmiş olsun (`appveyor.yml` repo kökünde)
+2. https://ci.appveyor.com/sites → **GitHub** ile giriş
+3. **New project** → `taorder` reposunu seç → **Add**
+4. İlk build otomatik başlar (~10–15 dk)
+5. Build bitince → **Artifacts** sekmesi:
+   - `TaOrder-Setup` → `TaOrder-1.0.0-x64.exe`
+   - `TaOrder-Portable` → portable exe
+6. İndir → müşteriye gönder
+
+**Yeniden build:** AppVeyor → projeye gir → **New build** veya yeni commit push.
+
+Config dosyası: kökte `appveyor.yml` (projede hazır).
 
 ---
 
@@ -202,19 +233,18 @@ Güncellemede aynı `appId` → veri korunur.
 ## 10. Karar ağacı (hangi yöntem?)
 
 ```
+GitHub Actions "account is locked" hatası?
+  └─ Evet → AppVeyor (§6) + Mac dmg yerel (npm run dist:mac)
+  └─ Hayır → GitHub Actions (public repo, §3)
+
 Windows müşteri var mı?
   └─ Evet → .exe lazım
-       ├─ GitHub public repo yapabilir misin?
-       │    └─ Evet → release-windows-only.yml veya release.yml (ÜCRETSİZ)
-       ├─ GitHub billing düzeltebilir misin?
-       │    └─ Evet → private + $5–10 limit
-       ├─ AppVeyor OSS?
-       │    └─ Public repo → appveyor.yml (ÜCRETSİZ)
-       └─ Windows PC / VM var mı?
-            └─ npm run dist:win (ÜCRETSİZ, tek seferlik)
+       ├─ AppVeyor (hesap kilitliyse — ÜCRETSİZ)
+       ├─ GitHub Actions windows-only (hesap açıksa — ÜCRETSİZ public)
+       └─ Windows PC → npm run dist:win
 
 Mac müşteri var mı?
-  └─ Kendi Mac'inizde npm run dist:mac (zaten çalışıyor)
+  └─ Kendi Mac'inizde npm run dist:mac
 ```
 
 ---
@@ -234,4 +264,4 @@ Mac müşteri var mı?
 | Tarih | Değişiklik |
 |-------|------------|
 | 2025-06-23 | İlk RELEASE.md — GitHub Actions planı, billing notları, alternatifler |
-| 2025-06-23 | release-windows-only.yml + appveyor.yml eklendi |
+| 2025-06-23 | Workflow Node.js 24 + actions/checkout@v6, setup-node@v6 |

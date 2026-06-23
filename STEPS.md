@@ -157,7 +157,7 @@ Sonraki fazda geliştirilecekler:
 | 2025-06-23 | 11 | Ayarlar sekmesi + özelleştirilebilir nav isimleri |
 | 2025-06-23 | 12 | Adisyon fişi yazdırma |
 | 2025-06-23 | 14 | GitHub Actions release workflow |
-| 2025-06-23 | 15 | RELEASE.md, windows-only workflow, AppVeyor, billing notları |
+| 2025-06-23 | 15 | RELEASE.md, AppVeyor; hesap kilitli → Actions çalışmaz |
 
 ---
 
