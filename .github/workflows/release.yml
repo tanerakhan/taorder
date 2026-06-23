@@ -27,10 +27,10 @@ jobs:
       - name: Kodu al
         uses: actions/checkout@v6
 
-      - name: Node.js 24
+      - name: Node.js 22
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Bağımlılıklar
@@ -57,10 +57,10 @@ jobs:
       - name: Kodu al
         uses: actions/checkout@v6
 
-      - name: Node.js 24
+      - name: Node.js 22
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Bağımlılıklar

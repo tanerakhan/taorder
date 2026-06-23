@@ -85,7 +85,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^11.7.0"
+    "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
