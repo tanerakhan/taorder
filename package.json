@@ -13,9 +13,12 @@
     "postinstall": "electron-builder install-app-deps",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:mac": "npm run build && electron-builder --mac",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:all": "npm run build && electron-builder --mac --win"
+    "dist:mac": "npm run build && electron-builder --mac -p never",
+    "dist:win": "npm run build && electron-builder --win -p never",
+    "dist:all": "npm run build && electron-builder --mac --win -p never",
+    "ci:win": "bash scripts/ci-workflow.sh run main",
+    "ci:win:status": "bash scripts/ci-workflow.sh status",
+    "ci:win:logs": "bash scripts/ci-workflow.sh logs"
   },
   "build": {
     "appId": "com.taorder.app",
@@ -25,6 +28,7 @@
       "output": "release",
       "buildResources": "build"
     },
+    "publish": null,
     "files": [
       "dist/**/*",
       "electron/**/*",

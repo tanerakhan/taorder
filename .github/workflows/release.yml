@@ -33,6 +33,16 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: electron-builder önbelleği
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-builder-win-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-builder-win-
+
       - name: Bağımlılıklar
         run: npm ci
 
@@ -40,6 +50,14 @@ jobs:
         run: npm run dist:win
         env:
           CI: true
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Çıktıları doğrula
+        shell: pwsh
+        run: |
+          Get-ChildItem release/*.exe | Format-Table Name, Length
+          if (-not (Test-Path release/TaOrder-*-x64.exe)) { throw "Kurulum .exe bulunamadı" }
+          if (-not (Test-Path release/TaOrder-*-portable.exe)) { throw "Portable .exe bulunamadı" }
 
       - name: Çıktıları yükle (Artifact)
         uses: actions/upload-artifact@v6
