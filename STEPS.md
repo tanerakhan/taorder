@@ -156,27 +156,28 @@ Sonraki fazda geliştirilecekler:
 | 2025-06-23 | 10 | Preload ESM hatası düzeltildi → `preload.cjs` |
 | 2025-06-23 | 11 | Ayarlar sekmesi + özelleştirilebilir nav isimleri |
 | 2025-06-23 | 12 | Adisyon fişi yazdırma |
-| 2025-06-23 | 14 | GitHub Actions release workflow (exe/dmg CI) |
+| 2025-06-23 | 14 | GitHub Actions release workflow |
+| 2025-06-23 | 15 | RELEASE.md, windows-only workflow, AppVeyor, billing notları |
 
 ---
 
 ## Adım 14 — GitHub Actions (2025-06-23)
 
 - `.github/workflows/release.yml`
-- `workflow_dispatch` → Actions'tan manuel build
-- `v*` tag push → GitHub Release + dosyalar
-- Artifacts: `windows` (exe), `macos` (dmg/zip)
-- Müşteriye sadece indirilen exe/dmg gider
+- `workflow_dispatch` + tag → Artifacts / GitHub Release
 
+---
 
-- `npm run dist:mac` / `dist:win` komutları
-- `release/` klasörüne installer çıktısı
-- `DISTRIBUTION.md` kullanıcı/kurulum kılavuzu
-- Sürüm **1.0.0**
+## Adım 15 — Release dokümantasyonu & alternatifler (2025-06-23)
 
+- **RELEASE.md** — tam dağıtım planı, billing, karar ağacı (AI context #3)
+- `release-windows-only.yml` — sadece Windows (macOS runner maliyeti yok)
+- `appveyor.yml` — ücretsiz Windows CI (public OSS)
+- Billing hatası: public repo veya $5–10 limit veya AppVeyor
 
-### Sorun
-Menü/masa ekleme butonları çalışmıyordu. Kök neden:
+---
+
+## Adım 10 — Preload Hatası Düzeltmesi (2025-06-23)
 ```
 Unable to load preload script: preload.js
 SyntaxError: Cannot use import statement outside a module

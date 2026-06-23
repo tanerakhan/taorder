@@ -1,0 +1,31 @@
+# AppVeyor — ücretsiz Windows CI (açık kaynak projeler)
+# https://ci.appveyor.com → GitHub repo ekle → otomatik build
+# Artifact: TaOrder-x64.exe, TaOrder-portable.exe
+
+version: 1.0.{build}
+
+image: Visual Studio 2022
+
+environment:
+  nodejs_version: "20"
+
+platform:
+  - x64
+
+install:
+  - ps: Install-Product node $env:nodejs_version x64
+  - npm ci
+
+build_script:
+  - npm run dist:win
+
+artifacts:
+  - path: release\TaOrder-*-x64.exe
+    name: TaOrder-Setup
+  - path: release\TaOrder-*-portable.exe
+    name: TaOrder-Portable
+
+cache:
+  - node_modules -> package-lock.json
+
+test: off

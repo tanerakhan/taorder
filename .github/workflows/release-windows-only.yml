@@ -1,0 +1,33 @@
+# Sadece Windows .exe — düşük maliyet / ücretsiz public repo
+# GitHub → Actions → "Release Windows Only" → Run workflow
+
+name: Release Windows Only
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run dist:win
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          retention-days: 90
+          path: |
+            release/TaOrder-*-x64.exe
+            release/TaOrder-*-portable.exe

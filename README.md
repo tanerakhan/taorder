@@ -22,7 +22,7 @@ npm run dev
 
 **Önerilen:** GitHub Actions — Mac'ten push, GitHub Windows'ta `.exe` üretir.
 
-Detaylı adımlar: **[DISTRIBUTION.md](./DISTRIBUTION.md)**
+Detaylı adımlar: **[RELEASE.md](./RELEASE.md)** (billing, AppVeyor, karar ağacı)
 
 ```bash
 # GitHub'a push sonrası:

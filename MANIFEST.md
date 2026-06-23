@@ -60,7 +60,9 @@ Veri **kullanıcının bilgisayarında** saklanır. Sunucu/bulut yok.
 ```
 taorder/
 ├── MANIFEST.md              ← Mimari + veri modeli (AI context #1)
-├── STEPS.md                 ← Yapılan adımlar kronolojisi (AI context #2)
+├── STEPS.md                 ← Geliştirme adımları (AI context #2)
+├── RELEASE.md               ← Dağıtım, CI, billing, müşteri exe/dmg (AI context #3)
+├── DISTRIBUTION.md          ← Kısa dağıtım özeti
 ├── electron/
 │   ├── main.js
 │   ├── preload.js
@@ -173,7 +175,7 @@ Detay: [`DISTRIBUTION.md`](./DISTRIBUTION.md)
 
 ## 9. AI Talimatları
 
-1. **MANIFEST.md + STEPS.md oku** — context kaybında buradan devam
+1. **MANIFEST.md + STEPS.md + RELEASE.md oku** — context kaybında buradan devam
 2. DB sadece main process; renderer IPC kullanır
 3. Soft delete koru (menu_items, tables)
 4. Ödeme ekleme — kullanıcı istemedikçe
