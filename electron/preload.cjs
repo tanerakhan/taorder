@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-const API_VERSION = '0.4.1';
+const API_VERSION = '0.5.0';
 
 contextBridge.exposeInMainWorld('taorder', {
   version: API_VERSION,
@@ -14,10 +14,16 @@ contextBridge.exposeInMainWorld('taorder', {
   },
   menu: {
     getAll: () => ipcRenderer.invoke('menu:getAll'),
-    getByCategory: (category) => ipcRenderer.invoke('menu:getByCategory', category),
+    getByCategoryId: (categoryId) => ipcRenderer.invoke('menu:getByCategoryId', categoryId),
     create: (item) => ipcRenderer.invoke('menu:create', item),
     update: (id, item) => ipcRenderer.invoke('menu:update', id, item),
     remove: (id) => ipcRenderer.invoke('menu:remove', id),
+  },
+  categories: {
+    getAll: () => ipcRenderer.invoke('categories:getAll'),
+    create: (data) => ipcRenderer.invoke('categories:create', data),
+    update: (id, data) => ipcRenderer.invoke('categories:update', id, data),
+    remove: (id) => ipcRenderer.invoke('categories:remove', id),
   },
   tables: {
     getAll: () => ipcRenderer.invoke('tables:getAll'),

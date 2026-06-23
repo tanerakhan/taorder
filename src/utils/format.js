@@ -4,8 +4,3 @@ export function formatPrice(amount) {
     currency: 'TRY',
   }).format(amount);
 }
-
-export const CATEGORY_LABELS = {
-  food: 'Yemek',
-  drink: 'İçecek',
-};

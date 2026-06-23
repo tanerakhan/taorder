@@ -1,6 +1,6 @@
 export const API_VERSION = '0.3.0';
 
-const REQUIRED_NAMESPACES = ['app', 'settings', 'menu', 'tables', 'orders', 'print'];
+const REQUIRED_NAMESPACES = ['app', 'settings', 'menu', 'categories', 'tables', 'orders', 'print'];
 
 export function getTaorder() {
   if (typeof window === 'undefined' || !window.taorder) {

@@ -1,30 +1,65 @@
-import { useState } from 'react';
-import { CATEGORY_LABELS } from '../utils/format';
+import { useEffect, useState } from 'react';
 import { getTaorder } from '../utils/taorder';
 import { useSettings } from '../contexts/SettingsContext';
 import { VIEWS } from '../constants/views';
 import './MenuPages.css';
 
-const EMPTY_FORM = { name: '', category: 'food', price: '' };
+function buildEmptyForm(categories) {
+  return {
+    name: '',
+    categoryId: categories[0]?.id ?? '',
+    price: '',
+  };
+}
 
 export default function MenuAddPage({ editItem, onShowToast, onEditDone }) {
   const { getNavLabel } = useSettings();
-  const [form, setForm] = useState(
-    editItem
-      ? { name: editItem.name, category: editItem.category, price: String(editItem.price) }
-      : EMPTY_FORM
-  );
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [form, setForm] = useState({ name: '', categoryId: '', price: '' });
 
   const isEditing = Boolean(editItem);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (loadingCategories) return;
+    if (editItem) {
+      setForm({
+        name: editItem.name,
+        categoryId: editItem.category_id,
+        price: String(editItem.price),
+      });
+    } else {
+      setForm(buildEmptyForm(categories));
+    }
+  }, [editItem, categories, loadingCategories]);
+
+  async function loadCategories() {
+    setLoadingCategories(true);
+    try {
+      const data = await getTaorder().categories.getAll();
+      setCategories(data);
+      if (!editItem) {
+        setForm(buildEmptyForm(data));
+      }
+    } catch (err) {
+      onShowToast(err.message || 'Kategoriler yüklenemedi', 'error');
+    } finally {
+      setLoadingCategories(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     const payload = {
       name: form.name.trim(),
-      category: form.category,
+      categoryId: Number(form.categoryId),
       price: parseFloat(form.price),
     };
-    if (!payload.name || isNaN(payload.price) || payload.price < 0) return;
+    if (!payload.name || !payload.categoryId || isNaN(payload.price) || payload.price < 0) return;
 
     try {
       const api = getTaorder();
@@ -35,7 +70,7 @@ export default function MenuAddPage({ editItem, onShowToast, onEditDone }) {
       } else {
         await api.menu.create(payload);
         onShowToast(`${payload.name} menüye eklendi`);
-        setForm(EMPTY_FORM);
+        setForm(buildEmptyForm(categories));
       }
     } catch (err) {
       onShowToast(err.message || 'Menü kaydedilemedi', 'error');
@@ -44,7 +79,7 @@ export default function MenuAddPage({ editItem, onShowToast, onEditDone }) {
 
   function handleCancelEdit() {
     onEditDone?.();
-    setForm(EMPTY_FORM);
+    setForm(buildEmptyForm(categories));
   }
 
   return (
@@ -57,60 +92,74 @@ export default function MenuAddPage({ editItem, onShowToast, onEditDone }) {
           <p className="page-desc">
             {isEditing
               ? 'Seçili öğenin bilgilerini güncelleyin.'
-              : 'Yeni yemek veya içecek ekleyin. Kayıt sonrası menü listesinde görünür.'}
+              : 'Yeni ürün ekleyin. Kategorileri Kategoriler sekmesinden yönetebilirsiniz.'}
           </p>
         </div>
       </header>
 
       <div className="card form-card">
-        <form onSubmit={handleSubmit}>
-          <label className="field-label">
-            Ürün adı
-            <input
-              type="text"
-              placeholder="Örn. Izgara Köfte"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-              autoFocus
-            />
-          </label>
-
-          <label className="field-label">
-            Kategori
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-            >
-              <option value="food">{CATEGORY_LABELS.food}</option>
-              <option value="drink">{CATEGORY_LABELS.drink}</option>
-            </select>
-          </label>
-
-          <label className="field-label">
-            Fiyat (₺)
-            <input
-              type="number"
-              placeholder="0.00"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              min="0"
-              step="0.01"
-              required
-            />
-          </label>
-
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              {isEditing ? 'Güncelle' : 'Menüye Ekle'}
-            </button>
-            {isEditing && (
-              <button type="button" className="btn btn-ghost" onClick={handleCancelEdit}>
-                İptal
-              </button>
-            )}
+        {loadingCategories ? (
+          <div className="empty-state">Kategoriler yükleniyor...</div>
+        ) : categories.length === 0 ? (
+          <div className="empty-state">
+            Önce {getNavLabel(VIEWS.categories)} sekmesinden en az bir kategori ekleyin.
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <label className="field-label">
+              Ürün adı
+              <input
+                type="text"
+                placeholder="Örn. Izgara Köfte"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                autoFocus
+              />
+            </label>
+
+            <label className="field-label">
+              Kategori
+              <select
+                value={form.categoryId}
+                onChange={(e) =>
+                  setForm({ ...form, categoryId: Number(e.target.value) })
+                }
+                required
+              >
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field-label">
+              Fiyat (₺)
+              <input
+                type="number"
+                placeholder="0.00"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                min="0"
+                step="0.01"
+                required
+              />
+            </label>
+
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary">
+                {isEditing ? 'Güncelle' : 'Menüye Ekle'}
+              </button>
+              {isEditing && (
+                <button type="button" className="btn btn-ghost" onClick={handleCancelEdit}>
+                  İptal
+                </button>
+              )}
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

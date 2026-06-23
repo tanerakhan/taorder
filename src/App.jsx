@@ -9,6 +9,7 @@ import MenuAddPage from './pages/MenuAddPage';
 import TableManagerPage from './pages/TableManagerPage';
 import OrdersPage from './pages/OrdersPage';
 import SettingsPage from './pages/SettingsPage';
+import CategoryManagerPage from './pages/CategoryManagerPage';
 
 export default function App() {
   const [view, setView] = useState(VIEWS.menuList);
@@ -52,6 +53,9 @@ export default function App() {
             onShowToast={showToast}
             onEditDone={handleEditDone}
           />
+        )}
+        {view === VIEWS.categories && (
+          <CategoryManagerPage onShowToast={showToast} />
         )}
         {view === VIEWS.tables && <TableManagerPage onShowToast={showToast} />}
         {view === VIEWS.orders && (

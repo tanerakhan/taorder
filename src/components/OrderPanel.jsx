@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { formatPrice, CATEGORY_LABELS } from '../utils/format';
+import { formatPrice } from '../utils/format';
+import { getCategoryTabActiveStyle } from '../constants/categoryColors';
 import { getTaorder } from '../utils/taorder';
 import ReceiptPreviewModal from './ReceiptPreviewModal';
 import './OrderPanel.css';
@@ -8,7 +9,8 @@ export default function OrderPanel({ table, onOrderChange, onClose, onShowToast 
   const tableId = table.id;
   const [bill, setBill] = useState({ items: [], total: 0 });
   const [menu, setMenu] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('food');
+  const [categories, setCategories] = useState([]);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [previewHtml, setPreviewHtml] = useState('');
   const [showPreview, setShowPreview] = useState(false);
@@ -21,12 +23,18 @@ export default function OrderPanel({ table, onOrderChange, onClose, onShowToast 
   async function loadData() {
     setLoading(true);
     const api = getTaorder();
-    const [billData, menuData] = await Promise.all([
+    const [billData, menuData, categoryData] = await Promise.all([
       api.orders.getBill(tableId),
       api.menu.getAll(),
+      api.categories.getAll(),
     ]);
     setBill(billData);
     setMenu(menuData);
+    setCategories(categoryData);
+    setActiveCategoryId((prev) => {
+      if (prev && categoryData.some((c) => c.id === prev)) return prev;
+      return categoryData[0]?.id ?? null;
+    });
     setLoading(false);
   }
 
@@ -104,7 +112,9 @@ export default function OrderPanel({ table, onOrderChange, onClose, onShowToast 
     onClose();
   }
 
-  const filteredMenu = menu.filter((m) => m.category === activeCategory);
+  const filteredMenu = activeCategoryId
+    ? menu.filter((m) => m.category_id === activeCategoryId)
+    : [];
 
   if (loading) {
     return (
@@ -125,23 +135,28 @@ export default function OrderPanel({ table, onOrderChange, onClose, onShowToast 
 
       <div className="menu-picker">
         <div className="category-tabs">
-          {['food', 'drink'].map((cat) => (
+          {categories.map((cat) => (
             <button
-              key={cat}
-              className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
+              key={cat.id}
+              className={`category-tab ${activeCategoryId === cat.id ? 'active' : ''}`}
+              style={activeCategoryId === cat.id ? getCategoryTabActiveStyle(cat.color) : undefined}
+              onClick={() => setActiveCategoryId(cat.id)}
             >
-              {CATEGORY_LABELS[cat]}
+              {cat.name}
             </button>
           ))}
         </div>
         <div className="menu-items">
-          {filteredMenu.map((item) => (
-            <button key={item.id} className="menu-item-btn" onClick={() => handleAddItem(item.id)}>
-              <span className="menu-item-name">{item.name}</span>
-              <span className="menu-item-price">{formatPrice(item.price)}</span>
-            </button>
-          ))}
+          {filteredMenu.length === 0 ? (
+            <p className="empty-state menu-empty-hint">Bu kategoride ürün yok</p>
+          ) : (
+            filteredMenu.map((item) => (
+              <button key={item.id} className="menu-item-btn" onClick={() => handleAddItem(item.id)}>
+                <span className="menu-item-name">{item.name}</span>
+                <span className="menu-item-price">{formatPrice(item.price)}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
 

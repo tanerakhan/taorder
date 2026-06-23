@@ -1,9 +1,9 @@
 # TaOrder — Proje Manifesti
 
 > **AI Context Dosyası** — Bu dosya projenin tek kaynaklı gerçeğidir (single source of truth).
-> Her yeni oturumda veya context dağıldığında önce bu dosyayı, ardından `STEPS.md` dosyasını oku.
+> Her yeni oturumda veya context dağıldığında önce bu dosyayı, ardından `STEPS.md` ve `CONTEXT.md` dosyasını oku.
 
-Son güncelleme: **2025-06-23** | Versiyon: **1.0.0 (MVP)**
+Son güncelleme: **2025-06-23** | Versiyon: **1.0.0 (MVP)** | Preload API: **0.5.0**
 
 ---
 
@@ -16,6 +16,7 @@ Son güncelleme: **2025-06-23** | Versiyon: **1.0.0 (MVP)**
 | Ayarlar + özelleştirilebilir sekme isimleri | ✅ v0.3 |
 | Menü ekleme formu + success toast | ✅ v0.2 |
 | Menü düzenle / sil | ✅ v0.2 |
+| **Dinamik kategori CRUD + etiket rengi** | ✅ v0.5 |
 | Masa CRUD + toplu sayı ayarı | ✅ v0.2 |
 | Sipariş sayfası (masaya atama) | ✅ v0.1 (temel) |
 | Adisyon kapatma (ödeme uygulama dışı) | ✅ v0.1 |
@@ -61,7 +62,8 @@ Veri **kullanıcının bilgisayarında** saklanır. Sunucu/bulut yok.
 taorder/
 ├── MANIFEST.md              ← Mimari + veri modeli (AI context #1)
 ├── STEPS.md                 ← Geliştirme adımları (AI context #2)
-├── RELEASE.md               ← Dağıtım, CI, billing, müşteri exe/dmg (AI context #3)
+├── RELEASE.md               ← Dağıtım, CI, billing (AI context #3)
+├── CONTEXT.md               ← Son değişiklikler + aktivasyon promptu (#4)
 ├── DISTRIBUTION.md          ← Kısa dağıtım özeti
 ├── electron/
 │   ├── main.js
@@ -69,6 +71,8 @@ taorder/
 │   ├── ipc/handlers.js
 │   └── database/
 │       ├── db.js
+│       ├── categoryRepository.js
+│       ├── categoryColors.js
 │       ├── menuRepository.js
 │       ├── tableRepository.js
 │       └── orderRepository.js
@@ -78,6 +82,7 @@ taorder/
     ├── pages/
     │   ├── MenuListPage.jsx
     │   ├── MenuAddPage.jsx
+    │   ├── CategoryManagerPage.jsx
     │   ├── TableManagerPage.jsx
     │   └── OrdersPage.jsx
     └── components/
@@ -99,12 +104,21 @@ taorder/
 
 Varsayılanlar `settingsDefaults.js` içinde; DB'de yoksa fallback kullanılır.
 
+### categories (içerik)
+| Alan | Tip | Açıklama |
+|------|-----|----------|
+| id | INTEGER PK | |
+| name | TEXT UNIQUE | Kategori adı |
+| color | TEXT | Hex etiket rengi (`#rrggbb`) |
+| sort_order | INTEGER | Sıralama |
+| active | INTEGER | Soft delete |
+
 ### menu_items (içerik)
 | Alan | Tip | Açıklama |
 |------|-----|----------|
 | id | INTEGER PK | |
 | name | TEXT | Ürün adı |
-| category | TEXT | `food` \| `drink` |
+| category_id | INTEGER FK | → `categories.id` |
 | price | REAL | Birim fiyat (₺) |
 | active | INTEGER | Soft delete |
 
@@ -130,7 +144,11 @@ Sipariş fazında kullanılır. Detay §5 eski manifest ile aynı — `order_ite
 - `settings.getAll()`, `settings.setMany(updates)`, `settings.reset()`
 
 ### menu
-- `getAll()`, `getByCategory(category)`, `create()`, `update()`, `remove()`
+- `getAll()`, `getByCategoryId(categoryId)`, `create()`, `update()`, `remove()`
+- create/update payload: `{ name, categoryId, price }`
+
+### categories
+- `getAll()`, `create({ name, color? })`, `update(id, { name, color })`, `remove(id)`
 
 ### tables
 - `getAll()` → düz masa listesi (yönetim)
@@ -152,7 +170,8 @@ Sipariş fazında kullanılır. Detay §5 eski manifest ile aynı — `order_ite
 | Sekme | Açıklama |
 |-------|----------|
 | **Menü** | Tüm yemek/içecek kartları, filtre, düzenle/sil |
-| **Menü Ekle** | Yeni içerik formu; success toast 3 sn |
+| **Menü Ekle** | Yeni ürün formu; kategori dropdown |
+| **Kategoriler** | Kategori CRUD + etiket rengi |
 | **Masalar** | Toplu sayı, tek ekle, liste CRUD; DB yolu gösterilir |
 | **Ayarlar** | Uygulama adı + sekme isimlerini özelleştir |
 | **Sipariş** | Masa seç → menüden atama → adisyon |
@@ -167,15 +186,16 @@ npm run dev              # geliştirme
 npm run build && npm start
 npm run dist:mac         # macOS .dmg
 npm run dist:win         # Windows .exe (Windows'ta)
+npm run ci:win           # GitHub Windows CI tetikle
 ```
 
-Detay: [`DISTRIBUTION.md`](./DISTRIBUTION.md)
+Detay: [`DISTRIBUTION.md`](./DISTRIBUTION.md) · [`CONTEXT.md`](./CONTEXT.md)
 
 ---
 
 ## 9. AI Talimatları
 
-1. **MANIFEST.md + STEPS.md + RELEASE.md oku** — context kaybında buradan devam
+1. **MANIFEST.md + STEPS.md + RELEASE.md + CONTEXT.md oku**
 2. DB sadece main process; renderer IPC kullanır
 3. Soft delete koru (menu_items, tables)
 4. Ödeme ekleme — kullanıcı istemedikçe
@@ -185,9 +205,9 @@ Detay: [`DISTRIBUTION.md`](./DISTRIBUTION.md)
 
 ## 10. Sonraki Adımlar
 
-1. Sipariş UX iyileştirmesi (atama akışı)
+1. ESC/POS ağ yazıcı modu (sürücüsüz fiş)
 2. Kapalı adisyon geçmişi
-3. Adisyon fişi yazdırma
+3. Sipariş UX iyileştirmesi
 
 ---
 
@@ -198,3 +218,4 @@ Detay: [`DISTRIBUTION.md`](./DISTRIBUTION.md)
 | 2025-06-23 | 0.1.0 | İlk mimari |
 | 2025-06-23 | 1.0.0 | MVP dağıtım paketi (electron-builder) |
 | 2025-06-23 | 0.2.1 | Preload.cjs fix |
+| 2025-06-23 | 0.5.0 | Dinamik kategoriler + etiket rengi; CI Windows build fix |

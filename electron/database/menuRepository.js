@@ -1,33 +1,43 @@
 import { getDb } from '../database/db.js';
 
+const MENU_SELECT = `
+  SELECT mi.id, mi.name, mi.category_id, mi.price, mi.active, mi.created_at,
+         c.name AS category_name, c.color AS category_color
+  FROM menu_items mi
+  INNER JOIN categories c ON c.id = mi.category_id
+  WHERE mi.active = 1 AND c.active = 1
+`;
+
 export const menuRepository = {
   getAll() {
     return getDb()
-      .prepare('SELECT * FROM menu_items WHERE active = 1 ORDER BY category, name')
+      .prepare(`${MENU_SELECT} ORDER BY c.sort_order, c.name, mi.name`)
       .all();
   },
 
-  getByCategory(category) {
+  getByCategoryId(categoryId) {
     return getDb()
-      .prepare('SELECT * FROM menu_items WHERE active = 1 AND category = ? ORDER BY name')
-      .all(category);
+      .prepare(`${MENU_SELECT} AND mi.category_id = ? ORDER BY mi.name`)
+      .all(categoryId);
   },
 
   getById(id) {
-    return getDb().prepare('SELECT * FROM menu_items WHERE id = ?').get(id);
+    return getDb()
+      .prepare(`${MENU_SELECT} AND mi.id = ?`)
+      .get(id);
   },
 
-  create({ name, category, price }) {
+  create({ name, categoryId, price }) {
     const result = getDb()
-      .prepare('INSERT INTO menu_items (name, category, price) VALUES (?, ?, ?)')
-      .run(name, category, price);
+      .prepare('INSERT INTO menu_items (name, category_id, price) VALUES (?, ?, ?)')
+      .run(name, categoryId, price);
     return this.getById(result.lastInsertRowid);
   },
 
-  update(id, { name, category, price }) {
+  update(id, { name, categoryId, price }) {
     getDb()
-      .prepare('UPDATE menu_items SET name = ?, category = ?, price = ? WHERE id = ?')
-      .run(name, category, price, id);
+      .prepare('UPDATE menu_items SET name = ?, category_id = ?, price = ? WHERE id = ?')
+      .run(name, categoryId, price, id);
     return this.getById(id);
   },
 

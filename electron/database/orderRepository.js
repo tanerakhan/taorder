@@ -22,9 +22,10 @@ export const orderRepository = {
   getOrderItems(orderId) {
     return getDb()
       .prepare(
-        `SELECT oi.*, mi.name, mi.category
+        `SELECT oi.*, mi.name, mi.category_id, c.name AS category_name
          FROM order_items oi
          JOIN menu_items mi ON mi.id = oi.menu_item_id
+         JOIN categories c ON c.id = mi.category_id
          WHERE oi.order_id = ?
          ORDER BY oi.added_at`
       )
@@ -58,9 +59,10 @@ export const orderRepository = {
 
     return getDb()
       .prepare(
-        `SELECT oi.*, mi.name, mi.category
+        `SELECT oi.*, mi.name, mi.category_id, c.name AS category_name
          FROM order_items oi
          JOIN menu_items mi ON mi.id = oi.menu_item_id
+         JOIN categories c ON c.id = mi.category_id
          WHERE oi.id = ?`
       )
       .get(result.lastInsertRowid);
@@ -78,9 +80,10 @@ export const orderRepository = {
     getDb().prepare('UPDATE order_items SET quantity = ? WHERE id = ?').run(quantity, orderItemId);
     return getDb()
       .prepare(
-        `SELECT oi.*, mi.name, mi.category
+        `SELECT oi.*, mi.name, mi.category_id, c.name AS category_name
          FROM order_items oi
          JOIN menu_items mi ON mi.id = oi.menu_item_id
+         JOIN categories c ON c.id = mi.category_id
          WHERE oi.id = ?`
       )
       .get(orderItemId);

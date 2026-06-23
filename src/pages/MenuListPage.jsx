@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { formatPrice, CATEGORY_LABELS } from '../utils/format';
+import { formatPrice } from '../utils/format';
+import { getCategoryBadgeStyle, getCategoryTabActiveStyle } from '../constants/categoryColors';
 import { getTaorder } from '../utils/taorder';
 import { useSettings } from '../contexts/SettingsContext';
 import { VIEWS } from '../constants/views';
@@ -8,18 +9,24 @@ import './MenuPages.css';
 export default function MenuListPage({ onEdit, onShowToast }) {
   const { getNavLabel } = useSettings();
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    loadMenu();
+    loadData();
   }, []);
 
-  async function loadMenu() {
+  async function loadData() {
     setLoading(true);
     try {
-      const data = await getTaorder().menu.getAll();
-      setItems(data);
+      const api = getTaorder();
+      const [menuData, categoryData] = await Promise.all([
+        api.menu.getAll(),
+        api.categories.getAll(),
+      ]);
+      setItems(menuData);
+      setCategories(categoryData);
     } catch (err) {
       onShowToast(err.message || 'Menü yüklenemedi', 'error');
     } finally {
@@ -32,17 +39,18 @@ export default function MenuListPage({ onEdit, onShowToast }) {
     try {
       await getTaorder().menu.remove(id);
       onShowToast('Menü öğesi silindi');
-      await loadMenu();
+      await loadData();
     } catch (err) {
       onShowToast(err.message || 'Silme başarısız', 'error');
     }
   }
 
   const filtered =
-    filter === 'all' ? items : items.filter((i) => i.category === filter);
+    filter === 'all' ? items : items.filter((i) => i.category_id === filter);
 
-  const foodCount = items.filter((i) => i.category === 'food').length;
-  const drinkCount = items.filter((i) => i.category === 'drink').length;
+  const categorySummary = categories
+    .map((cat) => `${cat.name}: ${items.filter((i) => i.category_id === cat.id).length}`)
+    .join(' · ');
 
   return (
     <div className="content-page menu-list-page">
@@ -50,21 +58,24 @@ export default function MenuListPage({ onEdit, onShowToast }) {
         <div>
           <h2 className="page-title">{getNavLabel(VIEWS.menuList)}</h2>
           <p className="page-desc">
-            {foodCount} yemek · {drinkCount} içecek · Toplam {items.length} öğe
+            {categorySummary ? `${categorySummary} · ` : ''}Toplam {items.length} öğe
           </p>
         </div>
         <div className="filter-tabs">
-          {[
-            { key: 'all', label: 'Tümü' },
-            { key: 'food', label: 'Yemekler' },
-            { key: 'drink', label: 'İçecekler' },
-          ].map(({ key, label }) => (
+          <button
+            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            Tümü
+          </button>
+          {categories.map((cat) => (
             <button
-              key={key}
-              className={`filter-tab ${filter === key ? 'active' : ''}`}
-              onClick={() => setFilter(key)}
+              key={cat.id}
+              className={`filter-tab ${filter === cat.id ? 'active' : ''}`}
+              style={filter === cat.id ? getCategoryTabActiveStyle(cat.color) : undefined}
+              onClick={() => setFilter(cat.id)}
             >
-              {label}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -84,8 +95,11 @@ export default function MenuListPage({ onEdit, onShowToast }) {
           {filtered.map((item) => (
             <article key={item.id} className="content-card">
               <div className="content-card-body">
-                <span className={`content-badge content-badge-${item.category}`}>
-                  {CATEGORY_LABELS[item.category]}
+                <span
+                  className="content-badge"
+                  style={getCategoryBadgeStyle(item.category_color)}
+                >
+                  {item.category_name}
                 </span>
                 <h3 className="content-name">{item.name}</h3>
                 <p className="content-price">{formatPrice(item.price)}</p>

@@ -2,14 +2,28 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
 import fs from 'fs';
+import {
+  DEFAULT_CATEGORY_COLOR,
+  pickCategoryColor,
+  SEED_CATEGORY_COLORS,
+} from './categoryColors.js';
 
 let db = null;
 
 const SCHEMA = `
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  color TEXT NOT NULL DEFAULT '#4f8cff',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS menu_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  category TEXT NOT NULL CHECK(category IN ('food', 'drink')),
+  category_id INTEGER NOT NULL REFERENCES categories(id),
   price REAL NOT NULL CHECK(price >= 0),
   active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -50,16 +64,16 @@ CREATE TABLE IF NOT EXISTS settings (
 `;
 
 const SEED_MENU = [
-  { name: 'Izgara Köfte', category: 'food', price: 280 },
-  { name: 'Tavuk Şiş', category: 'food', price: 240 },
-  { name: 'Mercimek Çorbası', category: 'food', price: 90 },
-  { name: 'Pide', category: 'food', price: 150 },
-  { name: 'Salata', category: 'food', price: 80 },
-  { name: 'Ayran', category: 'drink', price: 40 },
-  { name: 'Kola', category: 'drink', price: 50 },
-  { name: 'Su', category: 'drink', price: 20 },
-  { name: 'Çay', category: 'drink', price: 25 },
-  { name: 'Türk Kahvesi', category: 'drink', price: 60 },
+  { name: 'Izgara Köfte', categoryKey: 'food', price: 280 },
+  { name: 'Tavuk Şiş', categoryKey: 'food', price: 240 },
+  { name: 'Mercimek Çorbası', categoryKey: 'food', price: 90 },
+  { name: 'Pide', categoryKey: 'food', price: 150 },
+  { name: 'Salata', categoryKey: 'food', price: 80 },
+  { name: 'Ayran', categoryKey: 'drink', price: 40 },
+  { name: 'Kola', categoryKey: 'drink', price: 50 },
+  { name: 'Su', categoryKey: 'drink', price: 20 },
+  { name: 'Çay', categoryKey: 'drink', price: 25 },
+  { name: 'Türk Kahvesi', categoryKey: 'drink', price: 60 },
 ];
 
 function getDbPath() {
@@ -70,18 +84,166 @@ function getDbPath() {
   return path.join(userData, 'taorder.db');
 }
 
+function tableExists(database, name) {
+  return Boolean(
+    database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name)
+  );
+}
+
+function getColumnNames(database, table) {
+  return database.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+}
+
+function ensureDefaultCategories(database) {
+  const count = database.prepare('SELECT COUNT(*) AS count FROM categories').get();
+  if (count.count > 0) return;
+
+  database.prepare('INSERT INTO categories (name, sort_order, color) VALUES (?, ?, ?)').run(
+    'Yemek',
+    0,
+    SEED_CATEGORY_COLORS.Yemek
+  );
+  database.prepare('INSERT INTO categories (name, sort_order, color) VALUES (?, ?, ?)').run(
+    'İçecek',
+    1,
+    SEED_CATEGORY_COLORS.İçecek
+  );
+}
+
+function ensureCategoryColorColumn(database) {
+  const cols = getColumnNames(database, 'categories');
+  if (!cols.includes('color')) {
+    database.exec(
+      `ALTER TABLE categories ADD COLUMN color TEXT NOT NULL DEFAULT '${DEFAULT_CATEGORY_COLOR}'`
+    );
+    database
+      .prepare("UPDATE categories SET color = ? WHERE name = 'Yemek'")
+      .run(SEED_CATEGORY_COLORS.Yemek);
+    database
+      .prepare("UPDATE categories SET color = ? WHERE name = 'İçecek'")
+      .run(SEED_CATEGORY_COLORS.İçecek);
+    const others = database
+      .prepare("SELECT id FROM categories WHERE name NOT IN ('Yemek', 'İçecek') ORDER BY sort_order, id")
+      .all();
+    others.forEach((row, index) => {
+      database
+        .prepare('UPDATE categories SET color = ? WHERE id = ?')
+        .run(pickCategoryColor(index + 2), row.id);
+    });
+  }
+}
+
+function getDefaultCategoryIds(database) {
+  ensureDefaultCategories(database);
+  const foodCat = database.prepare("SELECT id FROM categories WHERE name = 'Yemek'").get();
+  const drinkCat = database.prepare("SELECT id FROM categories WHERE name = 'İçecek'").get();
+  if (!foodCat || !drinkCat) {
+    throw new Error('Varsayılan kategoriler oluşturulamadı');
+  }
+  return { foodId: foodCat.id, drinkId: drinkCat.id };
+}
+
+function assignLegacyCategoryIds(database) {
+  const { foodId, drinkId } = getDefaultCategoryIds(database);
+  database
+    .prepare("UPDATE menu_items SET category_id = ? WHERE category = 'food'")
+    .run(foodId);
+  database
+    .prepare("UPDATE menu_items SET category_id = ? WHERE category = 'drink'")
+    .run(drinkId);
+  database
+    .prepare('UPDATE menu_items SET category_id = ? WHERE category_id IS NULL')
+    .run(foodId);
+}
+
+function rebuildMenuItemsWithoutLegacyColumn(database) {
+  database.pragma('foreign_keys = OFF');
+  try {
+    database.exec('DROP TABLE IF EXISTS menu_items_new');
+    database.exec(`
+      CREATE TABLE menu_items_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category_id INTEGER NOT NULL REFERENCES categories(id),
+        price REAL NOT NULL CHECK(price >= 0),
+        active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO menu_items_new (id, name, category_id, price, active, created_at)
+        SELECT id, name, category_id, price, active, created_at FROM menu_items;
+      DROP TABLE menu_items;
+      ALTER TABLE menu_items_new RENAME TO menu_items;
+    `);
+  } finally {
+    database.pragma('foreign_keys = ON');
+  }
+}
+
+function runMigrations(database) {
+  if (!tableExists(database, 'categories')) {
+    database.exec(`
+      CREATE TABLE categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT NOT NULL DEFAULT '#4f8cff',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+    ensureDefaultCategories(database);
+  }
+
+  // Önceki başarısız migrate artığı
+  if (tableExists(database, 'menu_items_new')) {
+    database.exec('DROP TABLE IF EXISTS menu_items_new');
+  }
+
+  const menuColumns = getColumnNames(database, 'menu_items');
+  const hasLegacyCategory = menuColumns.includes('category');
+  const hasCategoryId = menuColumns.includes('category_id');
+
+  if (hasLegacyCategory && !hasCategoryId) {
+    database.exec('ALTER TABLE menu_items ADD COLUMN category_id INTEGER REFERENCES categories(id)');
+    assignLegacyCategoryIds(database);
+    rebuildMenuItemsWithoutLegacyColumn(database);
+  } else if (hasLegacyCategory && hasCategoryId) {
+    assignLegacyCategoryIds(database);
+    rebuildMenuItemsWithoutLegacyColumn(database);
+  }
+
+  ensureCategoryColorColumn(database);
+}
+
+function ensureMenuCategoryIndex(database) {
+  const menuColumns = getColumnNames(database, 'menu_items');
+  if (menuColumns.includes('category_id')) {
+    database.exec(
+      'CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category_id)'
+    );
+  }
+}
+
 function seedIfEmpty(database) {
-  const menuCount = database.prepare('SELECT COUNT(*) as count FROM menu_items').get();
+  ensureDefaultCategories(database);
+
+  const menuCount = database.prepare('SELECT COUNT(*) AS count FROM menu_items').get();
   if (menuCount.count === 0) {
+    const foodCat = database.prepare("SELECT id FROM categories WHERE name = 'Yemek'").get();
+    const drinkCat = database.prepare("SELECT id FROM categories WHERE name = 'İçecek'").get();
     const insertMenu = database.prepare(
-      'INSERT INTO menu_items (name, category, price) VALUES (@name, @category, @price)'
+      'INSERT INTO menu_items (name, category_id, price) VALUES (@name, @category_id, @price)'
     );
     for (const item of SEED_MENU) {
-      insertMenu.run(item);
+      insertMenu.run({
+        name: item.name,
+        category_id: item.categoryKey === 'food' ? foodCat.id : drinkCat.id,
+        price: item.price,
+      });
     }
   }
 
-  const tableCount = database.prepare('SELECT COUNT(*) as count FROM tables').get();
+  const tableCount = database.prepare('SELECT COUNT(*) AS count FROM tables').get();
   if (tableCount.count === 0) {
     const insertTable = database.prepare('INSERT INTO tables (number, label) VALUES (?, ?)');
     for (let i = 1; i <= 8; i++) {
@@ -96,6 +258,8 @@ export function initDatabase() {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  runMigrations(db);
+  ensureMenuCategoryIndex(db);
   seedIfEmpty(db);
   return db;
 }

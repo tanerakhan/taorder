@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { categoryRepository } from '../database/categoryRepository.js';
 import { menuRepository } from '../database/menuRepository.js';
 import { tableRepository } from '../database/tableRepository.js';
 import { orderRepository } from '../database/orderRepository.js';
@@ -25,10 +26,18 @@ export function registerIpcHandlers() {
 
   // Menü
   ipcMain.handle('menu:getAll', () => menuRepository.getAll());
-  ipcMain.handle('menu:getByCategory', (_, category) => menuRepository.getByCategory(category));
+  ipcMain.handle('menu:getByCategoryId', (_, categoryId) =>
+    menuRepository.getByCategoryId(categoryId)
+  );
   ipcMain.handle('menu:create', (_, item) => menuRepository.create(item));
   ipcMain.handle('menu:update', (_, id, item) => menuRepository.update(id, item));
   ipcMain.handle('menu:remove', (_, id) => menuRepository.remove(id));
+
+  // Kategoriler
+  ipcMain.handle('categories:getAll', () => categoryRepository.getAll());
+  ipcMain.handle('categories:create', (_, data) => categoryRepository.create(data));
+  ipcMain.handle('categories:update', (_, id, data) => categoryRepository.update(id, data));
+  ipcMain.handle('categories:remove', (_, id) => categoryRepository.remove(id));
 
   // Masalar (içerik yönetimi)
   ipcMain.handle('tables:getAll', () => tableRepository.getAll());

@@ -141,7 +141,8 @@ Sonraki fazda geliştirilecekler:
 ## Adım 9 — Sonraki Oturum İçin
 
 1. `MANIFEST.md` §10 öncelik listesine bak
-2. Bu dosyadaki son adım numarasından devam et
+2. `CONTEXT.md` — son oturum özeti + aktivasyon promptu
+3. Bu dosyadaki son adım numarasından devam et
 3. Yeni adım eklendiğinde buraya **Adım N** olarak yaz
 4. `MANIFEST.md` changelog güncelle
 
@@ -157,7 +158,41 @@ Sonraki fazda geliştirilecekler:
 | 2025-06-23 | 11 | Ayarlar sekmesi + özelleştirilebilir nav isimleri |
 | 2025-06-23 | 12 | Adisyon fişi yazdırma |
 | 2025-06-23 | 14 | GitHub Actions release workflow |
-| 2025-06-23 | 15 | RELEASE.md, AppVeyor; hesap kilitli → Actions çalışmaz |
+| 2025-06-23 | 15 | RELEASE.md, AppVeyor; billing |
+| 2025-06-23 | 16 | CI Windows build fix (GH_TOKEN, better-sqlite3 12) |
+| 2025-06-23 | 17 | Dinamik kategori CRUD |
+| 2025-06-23 | 18 | Kategori etiket renkleri |
+
+---
+
+## Adım 16 — CI Windows build düzeltmesi (2025-06-23)
+
+### Sorunlar
+- `npm ci` → better-sqlite3@11 Node 24 Windows prebuild yok
+- `dist:win` → electron-builder CI'da `GH_TOKEN` hatası (build aslında başarılıydı)
+
+### Çözüm
+- `better-sqlite3@^12.11.1`, CI Node **22**
+- `publish: null`, `-p never`, `scripts/ci-workflow.sh`
+- Başarılı run: Actions #28012323019
+
+---
+
+## Adım 17 — Dinamik kategoriler (2025-06-23)
+
+- `categories` tablosu; `menu_items.category_id` FK
+- Migrate: `food`/`drink` → Yemek/İçecek; yarım migrate düzeltmeleri
+- `CategoryManagerPage`, IPC `categories.*`, preload **0.5.0**
+- Menü listesi / sipariş paneli dinamik sekmeler
+
+---
+
+## Adım 18 — Kategori etiket renkleri (2025-06-23)
+
+- `categories.color` (hex)
+- `CategoryColorPicker` — 8 preset + özel renk
+- Menü etiketleri ve aktif filtre/sipariş sekmesi renklendirildi
+- Detay: `CONTEXT.md`
 
 ---
 
