@@ -1,0 +1,13 @@
+TaOrder — Windows Kurulum (Müşteri)
+
+1. TaOrder-1.0.0-x64.exe dosyasını indirin.
+2. Dosyaya çift tıklayın.
+3. Kurulum sihirbazında "İleri" deyin, kurulumu tamamlayın.
+4. Masaüstündeki "TaOrder" simgesine tıklayarak programı açın.
+
+Windows güvenlik uyarısı çıkarsa:
+  "Daha fazla bilgi" → "Yine de çalıştır"
+
+Verileriniz bu bilgisayarda saklanır; internet gerekmez.
+
+Destek için satıcınıza başvurun.

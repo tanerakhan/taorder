@@ -1,0 +1,39 @@
+.api-guard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 2rem;
+  background: var(--bg);
+}
+
+.api-guard-card {
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.api-guard-card h2 {
+  margin-bottom: 1rem;
+  color: var(--danger);
+}
+
+.api-guard-card p {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+
+.api-guard-card ol {
+  padding-left: 1.25rem;
+  color: var(--text);
+  line-height: 1.8;
+}
+
+.api-guard-card code {
+  background: var(--bg);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}

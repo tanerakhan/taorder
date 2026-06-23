@@ -1,0 +1,109 @@
+# TaOrder — Windows .exe + macOS .dmg otomatik derleme
+#
+# Tetikleme:
+#   1) Manuel: GitHub → Actions → Release → Run workflow
+#   2) Etiket: git tag v1.0.0 && git push origin v1.0.0  → Release sayfasına da yüklenir
+#
+# İndirme:
+#   Actions → son workflow → Artifacts (windows / macos)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: Windows paketi derle
+        run: npm run dist:win
+        env:
+          CI: true
+
+      - name: Çıktıları yükle (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          retention-days: 90
+          path: |
+            release/TaOrder-*-x64.exe
+            release/TaOrder-*-portable.exe
+
+  build-macos:
+    name: macOS (.dmg)
+    runs-on: macos-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Bağımlılıklar
+        run: npm ci
+
+      - name: macOS paketi derle
+        run: npm run dist:mac
+        env:
+          CI: true
+
+      - name: Çıktıları yükle (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          retention-days: 90
+          path: |
+            release/TaOrder-*.dmg
+            release/TaOrder-*.zip
+
+  github-release:
+    name: GitHub Release oluştur
+    needs: [build-windows, build-macos]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Windows artifact indir
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dist/windows
+
+      - name: macOS artifact indir
+        uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: dist/macos
+
+      - name: Release yükle
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/windows/*
+            dist/macos/*

@@ -1,0 +1,66 @@
+.table-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.table-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.25rem 1rem;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.table-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+.table-card.selected {
+  border-color: var(--accent);
+  background: rgba(79, 140, 255, 0.1);
+}
+
+.table-card.occupied {
+  border-color: var(--warning);
+}
+
+.table-card.occupied.selected {
+  border-color: var(--accent);
+}
+
+.table-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.table-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.table-total {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--success);
+  margin-top: 0.25rem;
+}
+
+.table-items {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.table-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
