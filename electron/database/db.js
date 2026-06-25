@@ -225,6 +225,11 @@ function ensureMenuCategoryIndex(database) {
 }
 
 function seedIfEmpty(database) {
+  // Paketlenmis surum: yeni kurulum bos baslar; guncellemede mevcut DB korunur (seed yalnizca tablo bosken calisirdi).
+  if (app.isPackaged) {
+    return;
+  }
+
   ensureDefaultCategories(database);
 
   const menuCount = database.prepare('SELECT COUNT(*) AS count FROM menu_items').get();

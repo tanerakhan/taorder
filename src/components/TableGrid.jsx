@@ -25,6 +25,15 @@ export default function TableGrid({ selectedTableId, onSelectTable }) {
     return <div className="empty-state">Masalar yükleniyor...</div>;
   }
 
+  if (tables.length === 0) {
+    return (
+      <div className="table-grid card">
+        <h2 className="card-title">{getNavLabel(VIEWS.tables)}</h2>
+        <p className="empty-state">Henüz masa yok. Masalar sekmesinden masa ekleyin.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="table-grid card">
       <h2 className="card-title">{getNavLabel(VIEWS.tables)}</h2>

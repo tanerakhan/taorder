@@ -1,6 +1,6 @@
 {
   "name": "taorder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Masaüstü adisyon ve sipariş yönetim sistemi",
   "author": "TaOrder",
   "main": "electron/main.js",
