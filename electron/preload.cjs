@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-const API_VERSION = '0.5.0';
+const API_VERSION = '0.6.0';
 
 contextBridge.exposeInMainWorld('taorder', {
   version: API_VERSION,
@@ -48,5 +48,6 @@ contextBridge.exposeInMainWorld('taorder', {
     receipt: (data) => ipcRenderer.invoke('print:receipt', data),
     getReceiptHtml: (options) => ipcRenderer.invoke('print:getReceiptHtml', options),
     getPrinters: () => ipcRenderer.invoke('print:getPrinters'),
+    test: (options) => ipcRenderer.invoke('print:test', options),
   },
 });

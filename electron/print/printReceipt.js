@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron';
 import { buildReceiptHtml } from './receiptHtml.js';
 import { SAMPLE_RECEIPT } from './sampleReceipt.js';
 import { settingsRepository } from '../database/settingsRepository.js';
+import { printEscPosReceipt, testEscPosConnection } from './escposReceipt.js';
 
 function mergeSettings(overrides = {}) {
   return { ...settingsRepository.getAll(), ...overrides };
@@ -18,9 +19,8 @@ function isPrintCanceled(failureReason) {
   return /cancel/i.test(failureReason);
 }
 
-export async function printReceipt(receiptData) {
-  const html = getReceiptHtml(receiptData);
-  const settings = mergeSettings();
+async function printSystemReceipt(receiptData, settings) {
+  const html = getReceiptHtml(receiptData, settings);
 
   const printWin = new BrowserWindow({
     show: false,
@@ -55,10 +55,10 @@ export async function printReceipt(receiptData) {
     });
 
     if (!result.success && !result.canceled) {
-      throw new Error(result.failureReason || 'Yazdırma başarısız');
+      throw new Error(result.failureReason || 'Yazdirma basarisiz');
     }
 
-    return result;
+    return { ...result, mode: 'system' };
   } finally {
     if (!printWin.isDestroyed()) {
       printWin.close();
@@ -66,14 +66,24 @@ export async function printReceipt(receiptData) {
   }
 }
 
-export async function getAvailablePrinters(mainWindow) {
-  if (!mainWindow || mainWindow.isDestroyed()) {
-    return [];
+export async function printReceipt(receiptData) {
+  const settings = mergeSettings();
+
+  if (settings.print_mode === 'escpos') {
+    return printEscPosReceipt(receiptData, settings);
   }
-  const printers = await mainWindow.webContents.getPrintersAsync();
-  return printers.map((p) => ({
-    name: p.name,
-    isDefault: p.isDefault,
-    status: p.status,
-  }));
+
+  return printSystemReceipt(receiptData, settings);
 }
+
+export async function testPrinter(settingsOverride = {}) {
+  const settings = mergeSettings(settingsOverride);
+
+  if (settings.print_mode === 'escpos') {
+    return testEscPosConnection(settings);
+  }
+
+  return printSystemReceipt(SAMPLE_RECEIPT, settings);
+}
+
+export { getAvailablePrinters } from './listPrinters.js';

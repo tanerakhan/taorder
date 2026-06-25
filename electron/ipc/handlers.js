@@ -6,7 +6,7 @@ import { orderRepository } from '../database/orderRepository.js';
 import { getDatabasePath } from '../database/db.js';
 import { settingsRepository } from '../database/settingsRepository.js';
 import { getMainWindow } from '../appState.js';
-import { printReceipt, getAvailablePrinters, getReceiptHtml } from '../print/printReceipt.js';
+import { printReceipt, getAvailablePrinters, getReceiptHtml, testPrinter } from '../print/printReceipt.js';
 
 export function registerIpcHandlers() {
   // Sistem
@@ -23,6 +23,7 @@ export function registerIpcHandlers() {
     getReceiptHtml(receiptData, settingsOverride)
   );
   ipcMain.handle('print:getPrinters', () => getAvailablePrinters(getMainWindow()));
+  ipcMain.handle('print:test', (_, { settingsOverride } = {}) => testPrinter(settingsOverride));
 
   // Menü
   ipcMain.handle('menu:getAll', () => menuRepository.getAll());

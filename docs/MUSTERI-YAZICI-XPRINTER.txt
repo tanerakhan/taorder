@@ -1,0 +1,39 @@
+TaOrder — Xprinter XP-Q80A Kurulum (Musteri)
+
+TaOrder, Xprinter gibi ESC/POS termal yazicilari dogrudan destekler.
+Yazici Windows listesinde gorunmese bile calisabilir.
+
+=== ONERILEN: Ethernet (Ag) ===
+
+1. Yaziciyi aga baglayin (RJ45 kablo veya Wi-Fi ayari).
+2. Xprinter aracindan veya yazici self-test ciktisindan IP adresini ogrenin
+   (ornek: 192.168.1.100).
+3. TaOrder → Ayarlar → Yazdirma modu: "ESC/POS termal" secin.
+4. "Termal yazici IP" alanina IP yazin (port: 9100).
+5. Kaydet → "Test Baskisi" tiklayin.
+
+=== ALTERNATIF: USB ===
+
+Yontem A — Windows yazici adi:
+1. Windows → Ayarlar → Bluetooth ve cihazlar → Yazicilar
+2. Xprinter surucusu kurulu ve yazici listede olmali
+3. Yazicinin TAM adini kopyalayin (ornek: "XP-80C")
+4. TaOrder Ayarlar → ESC/POS mod → USB alanina yapistirin
+5. IP alanini bos birakin → Test Baskisi
+
+Yontem B — Paylasim yolu (liste bos ise):
+1. Yaziciya sag tik → Yazici ozellikleri → Paylasim → Paylas
+2. Paylasim adi verin (ornek: XP80)
+3. TaOrder'da su formatta yazin: //localhost/XP80
+4. Test Baskisi
+
+=== SIK SORUNLAR ===
+
+- Liste bos: Normal. ESC/POS modunda IP veya paylasim yolu kullanin.
+- Test ciktisi Xprinter uygulamasindan geliyor ama TaOrder'dan gelmiyor:
+  Xprinter uygulamasi Windows disinda calisir; TaOrder icin yukaridaki
+  ESC/POS ayarini yapin.
+- Hicbir sey basmiyor: IP/port kontrol, yazici agda mi, Windows guvenlik
+  yaziciyi engelliyor mu kontrol edin.
+
+Destek icin satıcınıza IP adresi ve Windows yazici listesi ekran goruntusu gonderin.

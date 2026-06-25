@@ -1,6 +1,8 @@
 import { getDb } from './db.js';
 import { DEFAULT_SETTINGS } from './settingsDefaults.js';
 
+const CLEARABLE_KEYS = new Set(['print_device_name', 'print_escpos_host']);
+
 export const settingsRepository = {
   getAll() {
     const rows = getDb().prepare('SELECT key, value FROM settings').all();
@@ -19,12 +21,22 @@ export const settingsRepository = {
         if (!(key in DEFAULT_SETTINGS)) continue;
         const trimmed = String(value ?? '').trim();
 
-        if (key === 'print_device_name') {
+        if (CLEARABLE_KEYS.has(key)) {
           if (trimmed) {
             upsert.run(key, trimmed);
           } else {
             db.prepare('DELETE FROM settings WHERE key = ?').run(key);
           }
+          continue;
+        }
+
+        if (key === 'print_mode') {
+          upsert.run(key, trimmed === 'escpos' ? 'escpos' : 'system');
+          continue;
+        }
+
+        if (key === 'print_escpos_port') {
+          upsert.run(key, trimmed || '9100');
           continue;
         }
 

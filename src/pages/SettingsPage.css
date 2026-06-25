@@ -41,6 +41,39 @@
   width: 100%;
 }
 
+.settings-page .field-label select {
+  width: 100%;
+}
+
+.settings-printer-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.settings-printer-row select {
+  flex: 1;
+}
+
+.settings-printer-help {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: rgba(79, 140, 255, 0.08);
+  border: 1px solid rgba(79, 140, 255, 0.25);
+  border-radius: var(--radius);
+}
+
+.settings-printer-help strong {
+  color: var(--text);
+}
+
+.settings-page .hint code {
+  font-size: 0.75rem;
+}
+
 .settings-page .form-actions {
   display: flex;
   gap: 0.5rem;

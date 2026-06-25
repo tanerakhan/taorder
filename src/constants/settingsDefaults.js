@@ -9,6 +9,9 @@ export const DEFAULT_SETTINGS = {
   receipt_business_name: 'TaOrder',
   receipt_footer: 'Afiyet olsun',
   print_device_name: '',
+  print_mode: 'system',
+  print_escpos_host: '',
+  print_escpos_port: '9100',
 };
 
 export const SETTINGS_LABELS = {
@@ -21,7 +24,10 @@ export const SETTINGS_LABELS = {
   nav_settings: 'Ayarlar sekmesi',
   receipt_business_name: 'Fiş üst bilgi (işletme adı)',
   receipt_footer: 'Fiş alt mesaj',
-  print_device_name: 'Yazıcı adı (boş = varsayılan)',
+  print_device_name: 'Yazici adi (bos = varsayilan)',
+  print_mode: 'Yazdirma modu',
+  print_escpos_host: 'Termal yazici IP (Ethernet)',
+  print_escpos_port: 'Termal yazici port (varsayilan 9100)',
 };
 
 export const NAV_SETTING_KEYS = {
